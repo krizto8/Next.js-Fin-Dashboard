@@ -191,6 +191,5 @@ fin_dashboard/
 
 - **Alpha Vantage**: Free at [alphavantage.co](https://www.alphavantage.co/support/#api-key)
 - **Finnhub**: Free at [finnhub.io](https://finnhub.io/)
-- **No .env files needed** - configure everything in the UI!
 
 
