@@ -164,6 +164,24 @@ const dashboardSlice = createSlice({
       state.selectedWidget = null;
       saveDashboardState(state);
     },
+
+    setWidgets: (state, action) => {
+      state.widgets = action.payload;
+      saveDashboardState(state);
+    },
+
+    setLayout: (state, action) => {
+      state.layout = action.payload;
+      saveDashboardState(state);
+    },
+
+    applyTemplate: (state, action) => {
+      const { widgets, layout } = action.payload;
+      state.widgets = widgets;
+      state.layout = layout;
+      state.selectedWidget = null;
+      saveDashboardState(state);
+    },
   },
 });
 
@@ -207,6 +225,9 @@ export const {
   setRefreshInterval,
   importDashboard,
   clearDashboard,
+  setWidgets,
+  setLayout,
+  applyTemplate,
 } = dashboardSlice.actions;
 
 export default dashboardSlice.reducer;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FiX, FiSave } from 'react-icons/fi';
 import { updateWidgetConfig } from '../../store/slices/dashboardSlice';
+import FieldSelector from '../common/FieldSelector';
 
 export default function WidgetConfigModal({ isOpen, onClose, widgetId }) {
   const dispatch = useDispatch();
@@ -179,6 +180,24 @@ export default function WidgetConfigModal({ isOpen, onClose, widgetId }) {
               </select>
             </div>
 
+            {/* API Provider Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                API Provider
+              </label>
+              <select
+                value={config.apiProvider || 'alphavantage'}
+                onChange={(e) => setConfig({ ...config, apiProvider: e.target.value })}
+                className="select"
+              >
+                <option value="alphavantage">Alpha Vantage</option>
+                <option value="finnhub">Finnhub</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Choose your data provider. Finnhub uses your environment API key.
+              </p>
+            </div>
+
             {/* API Endpoint Configuration */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -197,24 +216,67 @@ export default function WidgetConfigModal({ isOpen, onClose, widgetId }) {
             </div>
 
             {/* Display Fields Configuration */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Display Fields (Advanced)
-              </label>
-              <textarea
-                value={config.displayFields?.join(', ') || ''}
-                onChange={(e) => setConfig({ 
-                  ...config, 
-                  displayFields: e.target.value.split(',').map(f => f.trim()).filter(f => f)
-                })}
-                placeholder="field1, field2, field3"
-                className="input"
-                rows={3}
-              />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Comma-separated list of fields to display (leave empty for default)
-              </p>
-            </div>
+            {widget.data && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Field Selection & Formatting
+                </label>
+                <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                  <FieldSelector
+                    data={widget.data}
+                    selectedFields={config.displayFields || []}
+                    formatOptions={config.fieldFormats || {}}
+                    onFieldToggle={(fieldPath, format) => {
+                      const newDisplayFields = [...(config.displayFields || [])];
+                      const newFieldFormats = { ...(config.fieldFormats || {}) };
+                      
+                      if (newDisplayFields.includes(fieldPath)) {
+                        // Remove field
+                        const index = newDisplayFields.indexOf(fieldPath);
+                        newDisplayFields.splice(index, 1);
+                        delete newFieldFormats[fieldPath];
+                      } else {
+                        // Add field
+                        newDisplayFields.push(fieldPath);
+                        if (format && format !== 'default') {
+                          newFieldFormats[fieldPath] = format;
+                        }
+                      }
+                      
+                      setConfig({
+                        ...config,
+                        displayFields: newDisplayFields,
+                        fieldFormats: newFieldFormats
+                      });
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Select fields to display and choose formatting options. Widget must have data loaded to see available fields.
+                </p>
+              </div>
+            )}
+
+            {!widget.data && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Display Fields (Manual Entry)
+                </label>
+                <textarea
+                  value={config.displayFields?.join(', ') || ''}
+                  onChange={(e) => setConfig({ 
+                    ...config, 
+                    displayFields: e.target.value.split(',').map(f => f.trim()).filter(f => f)
+                  })}
+                  placeholder="field1, field2, field3"
+                  className="input"
+                  rows={3}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Comma-separated list of fields. Load widget data first to use interactive field selector.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Actions */}

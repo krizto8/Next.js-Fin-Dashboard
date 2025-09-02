@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { FiSearch, FiChevronLeft, FiChevronRight, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
+import { formatFieldValue, getFieldValue, getFieldDisplayName } from '../../../utils/fieldFormatting';
 
 export default function StockTable({ widget }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -150,22 +151,36 @@ export default function StockTable({ widget }) {
     }
   };
 
+  // Get display fields and their formats
+  const getDisplayFields = () => {
+    if (widget.config?.displayFields && widget.config.displayFields.length > 0) {
+      return widget.config.displayFields;
+    }
+    
+    // Default fields based on data type
+    if (processedData.length > 0) {
+      return Object.keys(processedData[0]).slice(0, 6); // Show first 6 fields by default
+    }
+    
+    return [];
+  };
+
+  const displayFields = getDisplayFields();
+  const fieldFormats = widget.config?.fieldFormats || {};
+
   const renderTableHeaders = () => {
     if (processedData.length === 0) return null;
 
-    const sampleItem = processedData[0];
-    const fields = Object.keys(sampleItem);
-
     return (
       <tr className="bg-gray-50 dark:bg-gray-700">
-        {fields.map(field => (
+        {displayFields.map(field => (
           <th
             key={field}
             className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
             onClick={() => handleSort(field)}
           >
             <div className="flex items-center space-x-1">
-              <span>{field.replace(/([A-Z])/g, ' $1').toLowerCase()}</span>
+              <span>{getFieldDisplayName(field)}</span>
               {sortField === field && (
                 <span className="text-primary-600">
                   {sortDirection === 'asc' ? '↑' : '↓'}
@@ -181,20 +196,34 @@ export default function StockTable({ widget }) {
   const renderTableRows = () => {
     return paginatedData.map((item, index) => (
       <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-        {Object.entries(item).map(([key, value]) => (
-          <td key={key} className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
-            {key.includes('change') && typeof value === 'number' ? 
-              formatValue(value, 'change') :
-              key.includes('price') || key.includes('open') || key.includes('high') || key.includes('low') || key.includes('close') ?
-              formatValue(value, 'currency') :
-              key.includes('volume') ?
-              formatValue(value, 'number') :
-              key.includes('percent') ?
-              formatValue(value, 'percentage') :
-              formatValue(value)
-            }
-          </td>
-        ))}
+        {displayFields.map((field) => {
+          const rawValue = getFieldValue(item, field) ?? getFieldValue(widget.data, field) ?? item[field];
+          const formatType = fieldFormats[field] || 'default';
+          
+          // Determine field type for formatting
+          let fieldType = 'string';
+          if (typeof rawValue === 'number') fieldType = 'number';
+          if (field.includes('date') || field.includes('time')) fieldType = 'date';
+          if (field.includes('percent') || field.includes('%')) fieldType = 'percentage';
+          if (field.includes('price') || field.includes('cost') || field.includes('value')) fieldType = 'currency';
+          
+          const formattedValue = formatFieldValue(rawValue, formatType, fieldType);
+          
+          return (
+            <td key={field} className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+              {field.includes('change') && typeof rawValue === 'number' ? (
+                <span className={`flex items-center ${rawValue >= 0 ? 'text-success-600' : 'text-danger-600'}`}>
+                  {rawValue >= 0 ? <FiTrendingUp className="h-4 w-4 mr-1" /> : <FiTrendingDown className="h-4 w-4 mr-1" />}
+                  {formattedValue}
+                </span>
+              ) : (
+                <span className={fieldType === 'currency' ? 'font-medium' : fieldType === 'percentage' ? 'font-mono' : ''}>
+                  {formattedValue}
+                </span>
+              )}
+            </td>
+          );
+        })}
       </tr>
     ));
   };

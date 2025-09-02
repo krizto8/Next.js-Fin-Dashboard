@@ -13,6 +13,7 @@ export default function AddWidgetModal() {
     chartType: 'line',
     cardType: 'quote',
     refreshInterval: 30000,
+    apiProvider: 'alphavantage',
   });
 
   const widgetTypes = [
@@ -253,6 +254,24 @@ export default function AddWidgetModal() {
                   <option value={300000}>5 minutes</option>
                   <option value={900000}>15 minutes</option>
                 </select>
+              </div>
+
+              {/* API Provider Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  API Provider
+                </label>
+                <select
+                  value={config.apiProvider}
+                  onChange={(e) => setConfig({ ...config, apiProvider: e.target.value })}
+                  className="select"
+                >
+                  <option value="alphavantage">Alpha Vantage</option>
+                  <option value="finnhub">Finnhub</option>
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Choose your data provider. Finnhub uses your environment API key.
+                </p>
               </div>
             </div>
           )}

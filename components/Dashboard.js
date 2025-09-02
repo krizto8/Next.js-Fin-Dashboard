@@ -1,14 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { updateLayout, selectWidget, setAddingWidget } from '../store/slices/dashboardSlice';
 import Header from './layout/Header';
 import Sidebar from './layout/Sidebar';
 import Widget from './widgets/Widget';
-import AddWidgetModal from './modals/AddWidgetModal';
-import WidgetConfigModal from './modals/WidgetConfigModal';
 import LoadingOverlay from './common/LoadingOverlay';
+import TemplateShowcase from './common/TemplateShowcase';
 import { useWidgetRefresh } from '../hooks/useWidgetRefresh';
+
+// Lazy load modal components
+const AddWidgetModal = lazy(() => import('./modals/AddWidgetModal'));
+const WidgetConfigModal = lazy(() => import('./modals/WidgetConfigModal'));
+const TemplateSelectionModal = lazy(() => import('./modals/TemplateSelectionModal'));
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -17,6 +21,7 @@ export default function Dashboard() {
   const { widgets, layout, selectedWidget, isAddingWidget } = useSelector((state) => state.dashboard);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   // Custom hook for widget refresh
@@ -43,6 +48,10 @@ export default function Dashboard() {
     dispatch(setAddingWidget(true));
   };
 
+  const handleOpenTemplates = () => {
+    setIsTemplateModalOpen(true);
+  };
+
   if (!mounted) {
     return <LoadingOverlay />;
   }
@@ -52,47 +61,22 @@ export default function Dashboard() {
       <Header 
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onAddWidget={handleAddWidget}
+        onOpenTemplates={handleOpenTemplates}
       />
       
       <div className="flex">
         <Sidebar 
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          onOpenTemplates={handleOpenTemplates}
         />
         
         <main className="flex-1 p-6">
           {widgets.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="max-w-md mx-auto">
-                <div className="mb-8">
-                  <svg
-                    className="mx-auto h-24 w-24 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1"
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                  Welcome to Finance Dashboard
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-8">
-                  Start building your personalized finance monitoring dashboard by adding widgets.
-                </p>
-                <button
-                  onClick={handleAddWidget}
-                  className="btn-primary"
-                >
-                  Add Your First Widget
-                </button>
-              </div>
-            </div>
+            <TemplateShowcase 
+              onSelectTemplate={handleOpenTemplates}
+              onAddWidget={handleAddWidget}
+            />
           ) : (
             <ResponsiveGridLayout
               className="layout"
@@ -121,16 +105,25 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* Modals */}
-      {isAddingWidget && <AddWidgetModal />}
-      
-      {isConfigModalOpen && selectedWidget && (
-        <WidgetConfigModal
-          isOpen={isConfigModalOpen}
-          onClose={() => setIsConfigModalOpen(false)}
-          widgetId={selectedWidget}
-        />
-      )}
+      {/* Modals with lazy loading */}
+      <Suspense fallback={<LoadingOverlay />}>
+        {isAddingWidget && <AddWidgetModal />}
+        
+        {isConfigModalOpen && selectedWidget && (
+          <WidgetConfigModal
+            isOpen={isConfigModalOpen}
+            onClose={() => setIsConfigModalOpen(false)}
+            widgetId={selectedWidget}
+          />
+        )}
+        
+        {isTemplateModalOpen && (
+          <TemplateSelectionModal
+            isOpen={isTemplateModalOpen}
+            onClose={() => setIsTemplateModalOpen(false)}
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

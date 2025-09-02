@@ -7,13 +7,14 @@ import {
   FiMoon, 
   FiDownload, 
   FiUpload,
-  FiTrash2 
+  FiTrash2,
+  FiLayout 
 } from 'react-icons/fi';
 import { toggleTheme } from '../../store/slices/themeSlice';
 import { clearDashboard, importDashboard } from '../../store/slices/dashboardSlice';
 import { useRef } from 'react';
 
-export default function Header({ onToggleSidebar, onAddWidget }) {
+export default function Header({ onToggleSidebar, onAddWidget, onOpenTemplates }) {
   const dispatch = useDispatch();
   const { currentTheme } = useSelector((state) => state.theme);
   const { widgets } = useSelector((state) => state.dashboard);
@@ -132,6 +133,15 @@ export default function Header({ onToggleSidebar, onAddWidget }) {
               onChange={handleImportDashboard}
               className="hidden"
             />
+
+            {/* Templates */}
+            <button
+              onClick={onOpenTemplates}
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Choose from templates"
+            >
+              <FiLayout className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </button>
 
             {/* Clear Dashboard */}
             <button

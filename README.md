@@ -53,6 +53,129 @@ npm run build
 npm start
 ```
 
+## Deployment
+
+### Deploy to Vercel (Recommended)
+
+Vercel is the easiest way to deploy your Next.js Finance Dashboard. Follow these steps:
+
+#### Method 1: Deploy via GitHub (Recommended)
+
+1. **Push your code to GitHub** (if not already done):
+   ```bash
+   git add .
+   git commit -m "Initial commit"
+   git push origin main
+   ```
+
+2. **Connect to Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Sign up/login with your GitHub account
+   - Click "New Project"
+   - Import your repository: `krizto8/Next.js-Fin-Dashboard`
+
+3. **Configure Environment Variables**:
+   - In Vercel dashboard, go to your project → Settings → Environment Variables
+   - Add the following variables:
+     ```
+     NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY = JREDSN7N8KV2IEBK
+     NEXT_PUBLIC_API_BASE_URL = https://www.alphavantage.co/query
+     ```
+
+4. **Deploy**:
+   - Click "Deploy"
+   - Vercel will automatically build and deploy your app
+   - Your dashboard will be available at: `https://your-project-name.vercel.app`
+
+#### Method 2: Deploy via Vercel CLI
+
+1. **Install Vercel CLI**:
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Login to Vercel**:
+   ```bash
+   vercel login
+   ```
+
+3. **Deploy from your project directory**:
+   ```bash
+   cd fin_dashboard
+   vercel
+   ```
+
+4. **Follow the prompts**:
+   - Link to existing project or create new one
+   - Set environment variables when prompted
+   - Deploy with `vercel --prod` for production
+
+#### Method 3: Deploy via Vercel Dashboard
+
+1. **Create a production build locally**:
+   ```bash
+   npm run build
+   ```
+
+2. **Zip your project files** (exclude `node_modules` and `.git`)
+
+3. **Upload to Vercel**:
+   - Go to [vercel.com/new](https://vercel.com/new)
+   - Choose "Upload" option
+   - Drag and drop your zip file
+   - Configure environment variables
+   - Deploy
+
+### Environment Variables for Production
+
+Make sure to set these environment variables in your Vercel project:
+
+```env
+NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=JREDSN7N8KV2IEBK
+NEXT_PUBLIC_API_BASE_URL=https://www.alphavantage.co/query
+```
+
+### Post-Deployment
+
+After successful deployment:
+
+1. **Custom Domain** (Optional):
+   - Go to Vercel Dashboard → Your Project → Settings → Domains
+   - Add your custom domain
+   - Configure DNS records as instructed
+
+2. **Performance Monitoring**:
+   - Monitor your dashboard performance in Vercel Analytics
+   - Check API usage in Alpha Vantage dashboard
+
+3. **Automatic Deployments**:
+   - Every push to your main branch will trigger automatic deployment
+   - Pull requests create preview deployments
+
+### Troubleshooting Deployment
+
+**Common Issues:**
+
+1. **Build Fails**: Check your local build with `npm run build`
+2. **API Not Working**: Verify environment variables are set correctly
+3. **Icons Missing**: Ensure all React Icons dependencies are in `package.json`
+4. **Chart.js Errors**: Verify Chart.js adapters are installed: `npm install chartjs-adapter-date-fns`
+
+**Useful Commands:**
+```bash
+# Check deployment logs
+vercel logs [deployment-url]
+
+# Redeploy latest commit
+vercel --prod
+
+# Preview deployment
+vercel
+
+# Check project status
+vercel ls
+```
+
 ## Usage
 
 ### Adding Widgets

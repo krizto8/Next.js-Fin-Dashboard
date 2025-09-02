@@ -5,10 +5,11 @@ import {
   FiList, 
   FiFile, 
   FiSettings, 
-  FiInfo 
+  FiInfo,
+  FiLayout 
 } from 'react-icons/fi';
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, onOpenTemplates }) {
   const { widgets, refreshInterval } = useSelector((state) => state.dashboard);
   const { apiCallsCount, lastApiCall } = useSelector((state) => state.api);
 
@@ -59,6 +60,24 @@ export default function Sidebar({ isOpen, onClose }) {
 
           {/* Sidebar Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Quick Actions */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+                <FiLayout className="h-4 w-4 mr-2" />
+                Quick Start
+              </h3>
+              <button
+                onClick={() => {
+                  onOpenTemplates?.();
+                  onClose();
+                }}
+                className="w-full p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex items-center justify-center gap-2"
+              >
+                <FiLayout className="h-4 w-4" />
+                Browse Dashboard Templates
+              </button>
+            </div>
+
             {/* Widget Statistics */}
             <div>
               <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">

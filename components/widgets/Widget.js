@@ -1,9 +1,12 @@
 import { useDispatch } from 'react-redux';
+import { lazy, Suspense } from 'react';
 import { FiSettings, FiX, FiRefreshCw } from 'react-icons/fi';
 import { removeWidget } from '../../store/slices/dashboardSlice';
-import StockTable from './types/StockTable';
-import StockChart from './types/StockChart';
-import StockCard from './types/StockCard';
+
+// Lazy load widget types
+const StockTable = lazy(() => import('./types/StockTable'));
+const StockChart = lazy(() => import('./types/StockChart'));
+const StockCard = lazy(() => import('./types/StockCard'));
 
 export default function Widget({ widget, onSelect, onConfig, isSelected }) {
   const dispatch = useDispatch();
@@ -134,7 +137,14 @@ export default function Widget({ widget, onSelect, onConfig, isSelected }) {
             </button>
           </div>
         ) : (
-          renderWidgetContent()
+          <Suspense fallback={
+            <div className="error-state">
+              <div className="loading-spinner mx-auto mb-4" />
+              <p>Loading widget...</p>
+            </div>
+          }>
+            {renderWidgetContent()}
+          </Suspense>
         )}
       </div>
 

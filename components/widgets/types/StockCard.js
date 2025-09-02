@@ -1,9 +1,56 @@
 import { useMemo } from 'react';
 import { FiTrendingUp, FiTrendingDown, FiActivity, FiDollarSign, FiBarChart } from 'react-icons/fi';
+import { formatFieldValue, getFieldValue, getFieldDisplayName } from '../../../utils/fieldFormatting';
 
 export default function StockCard({ widget }) {
   const cardData = useMemo(() => {
-    if (!widget.data) return null;
+    // First check if widget has an error (from useWidgetRefresh)
+    if (widget.error) {
+      const provider = widget.config?.apiProvider || 'alphavantage';
+      return {
+        type: 'error',
+        message: widget.error,
+        provider: provider
+      };
+    }
+
+    if (!widget.data) {
+      return null;
+    }
+
+    // Check for API rate limit or error messages from different providers
+    if (widget.data['Information']) {
+      return {
+        type: 'error',
+        message: widget.data['Information'],
+        provider: 'alphavantage'
+      };
+    }
+
+    if (widget.data['Error Message']) {
+      return {
+        type: 'error',
+        message: widget.data['Error Message'],
+        provider: 'alphavantage'
+      };
+    }
+
+    if (widget.data['Note']) {
+      return {
+        type: 'error',
+        message: widget.data['Note'],
+        provider: 'alphavantage'
+      };
+    }
+
+    // Check for Finnhub specific errors
+    if (widget.data['error']) {
+      return {
+        type: 'error',
+        message: widget.data['error'],
+        provider: 'finnhub'
+      };
+    }
 
     // Handle different types of API responses
     if (widget.data['Global Quote']) {
@@ -94,6 +141,123 @@ export default function StockCard({ widget }) {
     return value.toLocaleString();
   };
 
+  const renderErrorCard = (data) => {
+    // Determine the provider with better detection
+    let provider = data.provider || widget.config?.apiProvider || 'alphavantage';
+    
+    // Auto-detect provider from error message if not explicitly set
+    if (data.message.includes('Finnhub')) {
+      provider = 'finnhub';
+    } else if (data.message.includes('Alpha Vantage') || data.message.includes('alphavantage')) {
+      provider = 'alphavantage';
+    }
+    
+    // Get provider-specific information
+    const getProviderInfo = (provider) => {
+      switch (provider) {
+        case 'finnhub':
+          return {
+            name: 'Finnhub',
+            freeTier: '60 calls/minute (Free)',
+            premium: 'Higher rate limits + Premium features',
+            upgradeText: 'This feature requires a Finnhub premium subscription.',
+            switchText: 'Try switching to Alpha Vantage in widget settings'
+          };
+        case 'alphavantage':
+        default:
+          return {
+            name: 'Alpha Vantage',
+            freeTier: '25 requests/day (Free)',
+            premium: 'Unlimited requests (Premium)',
+            upgradeText: 'Daily API limit reached. Please try again later.',
+            switchText: 'Try switching to Finnhub in widget settings'
+          };
+      }
+    };
+
+    const providerInfo = getProviderInfo(provider);
+    
+    // Determine if it's a rate limit error with better detection
+    const isRateLimit = data.message.includes('rate limit') || 
+                       data.message.includes('frequency limit') ||
+                       data.message.includes('premium subscription') ||
+                       data.message.includes("don't have access") ||
+                       data.message.includes('API limit') ||
+                       data.message.includes('403') ||
+                       data.message.includes('limit reached');
+
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center p-4">
+        <div className="text-red-600 dark:text-red-400 mb-4">
+          <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          {isRateLimit ? `${providerInfo.name} API Limit` : `${providerInfo.name} Error`}
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+          {isRateLimit 
+            ? providerInfo.upgradeText
+            : data.message
+          }
+        </p>
+        {isRateLimit && (
+          <div className="mt-4 text-xs text-gray-500 dark:text-gray-500 space-y-1">
+            <p>• Free tier: {providerInfo.freeTier}</p>
+            <p>• Premium: {providerInfo.premium}</p>
+            <p className="mt-2 text-blue-600 dark:text-blue-400">
+              💡 {providerInfo.switchText}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render custom selected fields
+  const renderCustomFields = (data) => {
+    const displayFields = widget.config?.displayFields || [];
+    const fieldFormats = widget.config?.fieldFormats || {};
+    
+    if (displayFields.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        {displayFields.slice(0, 6).map((field) => {
+          const rawValue = getFieldValue(data, field) ?? getFieldValue(widget.data, field);
+          const formatType = fieldFormats[field] || 'default';
+          
+          // Determine field type
+          let fieldType = 'string';
+          if (typeof rawValue === 'number') fieldType = 'number';
+          if (field.includes('date') || field.includes('time')) fieldType = 'date';
+          if (field.includes('percent') || field.includes('%')) fieldType = 'percentage';
+          if (field.includes('price') || field.includes('cost') || field.includes('value')) fieldType = 'currency';
+          
+          const formattedValue = formatFieldValue(rawValue, formatType, fieldType);
+          
+          return (
+            <div key={field} className="text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                {getFieldDisplayName(field)}
+              </p>
+              <p className={`text-sm font-medium mt-1 ${
+                fieldType === 'currency' ? 'text-green-600 dark:text-green-400' :
+                fieldType === 'percentage' ? 'text-blue-600 dark:text-blue-400' :
+                'text-gray-900 dark:text-gray-100'
+              }`}>
+                {formattedValue}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderQuoteCard = (data) => (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -147,6 +311,9 @@ export default function StockCard({ widget }) {
           <p className="font-semibold text-gray-900 dark:text-gray-100">{formatVolume(data.volume)}</p>
         </div>
       </div>
+      
+      {/* Custom Fields */}
+      {renderCustomFields(data)}
     </div>
   );
 
@@ -288,6 +455,7 @@ export default function StockCard({ widget }) {
 
   return (
     <div className="h-full">
+      {cardData.type === 'error' && renderErrorCard(cardData)}
       {cardData.type === 'quote' && renderQuoteCard(cardData)}
       {cardData.type === 'list' && renderListCard(cardData)}
       {cardData.type === 'timeseries' && renderTimeSeriesCard(cardData)}
