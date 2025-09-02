@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { FiX, FiGrid, FiBarChart, FiCreditCard } from 'react-icons/fi';
 import { addWidget, setAddingWidget } from '../../store/slices/dashboardSlice';
 
 export default function AddWidgetModal() {
   const dispatch = useDispatch();
+  const { configs } = useSelector((state) => state.apiConfig);
   const [selectedType, setSelectedType] = useState('');
+  
+  // Get first enabled provider as default
+  const defaultProvider = Object.keys(configs).find(key => configs[key].enabled) || 'alphavantage';
+  
   const [config, setConfig] = useState({
     title: '',
     symbol: 'AAPL',
@@ -13,7 +18,7 @@ export default function AddWidgetModal() {
     chartType: 'line',
     cardType: 'quote',
     refreshInterval: 30000,
-    apiProvider: 'alphavantage',
+    apiProvider: defaultProvider,
   });
 
   const widgetTypes = [
@@ -266,11 +271,18 @@ export default function AddWidgetModal() {
                   onChange={(e) => setConfig({ ...config, apiProvider: e.target.value })}
                   className="select"
                 >
-                  <option value="alphavantage">Alpha Vantage</option>
-                  <option value="finnhub">Finnhub</option>
+                  {Object.entries(configs).map(([key, provider]) => (
+                    <option 
+                      key={key} 
+                      value={key}
+                      disabled={!provider.enabled}
+                    >
+                      {provider.name} {!provider.enabled && '(Disabled)'}
+                    </option>
+                  ))}
                 </select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Choose your data provider. Finnhub uses your environment API key.
+                  Choose your data provider. Configure providers in the API settings.
                 </p>
               </div>
             </div>

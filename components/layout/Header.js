@@ -8,10 +8,12 @@ import {
   FiDownload, 
   FiUpload,
   FiTrash2,
-  FiLayout 
+  FiLayout,
+  FiSettings 
 } from 'react-icons/fi';
 import { toggleTheme } from '../../store/slices/themeSlice';
 import { clearDashboard, importDashboard } from '../../store/slices/dashboardSlice';
+import { openConfigModal } from '../../store/slices/apiConfigSlice';
 import { useRef } from 'react';
 
 export default function Header({ onToggleSidebar, onAddWidget, onOpenTemplates }) {
@@ -70,35 +72,40 @@ export default function Header({ onToggleSidebar, onAddWidget, onOpenTemplates }
     }
   };
 
+  const handleOpenApiConfig = () => {
+    dispatch(openConfigModal());
+  };
+
   const refreshAllWidgets = () => {
     // This will trigger a refresh of all widgets
     window.dispatchEvent(new CustomEvent('refresh-all-widgets'));
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+    <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 w-full">
+      <div className="w-full px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
             <button
               onClick={onToggleSidebar}
-              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex-shrink-0"
               aria-label="Toggle sidebar"
             >
               <FiMenu className="h-5 w-5 text-gray-600 dark:text-gray-300" />
             </button>
             
-            <div>
-              <h1 className="text-2xl font-bold text-gradient">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-2xl font-bold text-gradient truncate">
                 Finance Dashboard
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 hidden sm:block">
                 Real-time market data and analytics
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center space-x-3 flex-shrink-0">
             {/* Refresh All */}
             <button
               onClick={refreshAllWidgets}
@@ -126,13 +133,6 @@ export default function Header({ onToggleSidebar, onAddWidget, onOpenTemplates }
             >
               <FiUpload className="h-5 w-5 text-gray-600 dark:text-gray-300" />
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleImportDashboard}
-              className="hidden"
-            />
 
             {/* Templates */}
             <button
@@ -141,6 +141,15 @@ export default function Header({ onToggleSidebar, onAddWidget, onOpenTemplates }
               title="Choose from templates"
             >
               <FiLayout className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </button>
+
+            {/* API Configuration */}
+            <button
+              onClick={handleOpenApiConfig}
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Configure API providers"
+            >
+              <FiSettings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
             </button>
 
             {/* Clear Dashboard */}
@@ -175,6 +184,54 @@ export default function Header({ onToggleSidebar, onAddWidget, onOpenTemplates }
               <span>Add Widget</span>
             </button>
           </div>
+
+          {/* Mobile/Tablet Actions */}
+          <div className="flex lg:hidden items-center space-x-2 flex-shrink-0">
+            {/* Essential actions for mobile */}
+            <button
+              onClick={onOpenTemplates}
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Templates"
+            >
+              <FiLayout className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </button>
+
+            <button
+              onClick={handleOpenApiConfig}
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Settings"
+            >
+              <FiSettings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+            </button>
+
+            <button
+              onClick={handleThemeToggle}
+              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Toggle theme"
+            >
+              {currentTheme === 'dark' ? (
+                <FiSun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <FiMoon className="h-5 w-5 text-gray-600" />
+              )}
+            </button>
+
+            <button
+              onClick={onAddWidget}
+              className="btn-primary p-2"
+              title="Add Widget"
+            >
+              <FiPlus className="h-4 w-4" />
+            </button>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImportDashboard}
+            className="hidden"
+          />
         </div>
       </div>
     </header>

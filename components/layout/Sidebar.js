@@ -11,7 +11,7 @@ import {
 
 export default function Sidebar({ isOpen, onClose, onOpenTemplates }) {
   const { widgets, refreshInterval } = useSelector((state) => state.dashboard);
-  const { apiCallsCount, lastApiCall } = useSelector((state) => state.api);
+  const { apiCallsCount, lastApiCall } = useSelector((state) => state.apiConfig);
 
   const widgetStats = {
     total: widgets.length,

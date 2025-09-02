@@ -1,13 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import dashboardReducer from './slices/dashboardSlice';
-import apiReducer from './slices/apiSlice';
 import themeReducer from './slices/themeSlice';
+import apiConfigReducer from './slices/apiConfigSlice';
 
 export const store = configureStore({
   reducer: {
     dashboard: dashboardReducer,
-    api: apiReducer,
     theme: themeReducer,
+    apiConfig: apiConfigReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

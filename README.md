@@ -4,7 +4,9 @@ A customizable real-time finance monitoring dashboard built with Next.js and Rea
 
 ## Features
 
-- **Real-time Data**: Live stock market data from Alpha Vantage API
+- **Real-time Data**: Live stock market data from multiple API providers
+- **User-Configurable APIs**: Set up API keys and providers through the UI
+- **Multiple Data Sources**: Support for Alpha Vantage, Finnhub, and custom APIs
 - **Customizable Widgets**: Add, remove, and configure various widget types
 - **Interactive Charts**: Visualize stock data with Chart.js
 - **Responsive Design**: Works on all device sizes
@@ -12,6 +14,7 @@ A customizable real-time finance monitoring dashboard built with Next.js and Rea
 - **Drag & Drop**: Rearrange widgets with drag-and-drop functionality
 - **Data Persistence**: Dashboard state saves automatically
 - **Export/Import**: Backup and restore dashboard configurations
+- **Dashboard Templates**: Pre-built layouts for different use cases
 
 ## Widget Types
 
@@ -24,7 +27,7 @@ A customizable real-time finance monitoring dashboard built with Next.js and Rea
 ### Prerequisites
 
 - Node.js (version 14 or higher)
-- Alpha Vantage API key (included in the project)
+- API keys from supported providers (configured through the UI)
 
 ### Installation
 
@@ -46,134 +49,17 @@ npm run dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
+5. **Configure API Providers**: 
+   - Click the Settings (⚙️) icon in the header
+   - Add your API keys for supported providers
+   - Enable the providers you want to use
+   - Test the connection to verify setup
+
 ### Building for Production
 
 ```bash
 npm run build
 npm start
-```
-
-## Deployment
-
-### Deploy to Vercel (Recommended)
-
-Vercel is the easiest way to deploy your Next.js Finance Dashboard. Follow these steps:
-
-#### Method 1: Deploy via GitHub (Recommended)
-
-1. **Push your code to GitHub** (if not already done):
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-2. **Connect to Vercel**:
-   - Go to [vercel.com](https://vercel.com)
-   - Sign up/login with your GitHub account
-   - Click "New Project"
-   - Import your repository: `krizto8/Next.js-Fin-Dashboard`
-
-3. **Configure Environment Variables**:
-   - In Vercel dashboard, go to your project → Settings → Environment Variables
-   - Add the following variables:
-     ```
-     NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY = JREDSN7N8KV2IEBK
-     NEXT_PUBLIC_API_BASE_URL = https://www.alphavantage.co/query
-     ```
-
-4. **Deploy**:
-   - Click "Deploy"
-   - Vercel will automatically build and deploy your app
-   - Your dashboard will be available at: `https://your-project-name.vercel.app`
-
-#### Method 2: Deploy via Vercel CLI
-
-1. **Install Vercel CLI**:
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Login to Vercel**:
-   ```bash
-   vercel login
-   ```
-
-3. **Deploy from your project directory**:
-   ```bash
-   cd fin_dashboard
-   vercel
-   ```
-
-4. **Follow the prompts**:
-   - Link to existing project or create new one
-   - Set environment variables when prompted
-   - Deploy with `vercel --prod` for production
-
-#### Method 3: Deploy via Vercel Dashboard
-
-1. **Create a production build locally**:
-   ```bash
-   npm run build
-   ```
-
-2. **Zip your project files** (exclude `node_modules` and `.git`)
-
-3. **Upload to Vercel**:
-   - Go to [vercel.com/new](https://vercel.com/new)
-   - Choose "Upload" option
-   - Drag and drop your zip file
-   - Configure environment variables
-   - Deploy
-
-### Environment Variables for Production
-
-Make sure to set these environment variables in your Vercel project:
-
-```env
-NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=JREDSN7N8KV2IEBK
-NEXT_PUBLIC_API_BASE_URL=https://www.alphavantage.co/query
-```
-
-### Post-Deployment
-
-After successful deployment:
-
-1. **Custom Domain** (Optional):
-   - Go to Vercel Dashboard → Your Project → Settings → Domains
-   - Add your custom domain
-   - Configure DNS records as instructed
-
-2. **Performance Monitoring**:
-   - Monitor your dashboard performance in Vercel Analytics
-   - Check API usage in Alpha Vantage dashboard
-
-3. **Automatic Deployments**:
-   - Every push to your main branch will trigger automatic deployment
-   - Pull requests create preview deployments
-
-### Troubleshooting Deployment
-
-**Common Issues:**
-
-1. **Build Fails**: Check your local build with `npm run build`
-2. **API Not Working**: Verify environment variables are set correctly
-3. **Icons Missing**: Ensure all React Icons dependencies are in `package.json`
-4. **Chart.js Errors**: Verify Chart.js adapters are installed: `npm install chartjs-adapter-date-fns`
-
-**Useful Commands:**
-```bash
-# Check deployment logs
-vercel logs [deployment-url]
-
-# Redeploy latest commit
-vercel --prod
-
-# Preview deployment
-vercel
-
-# Check project status
-vercel ls
 ```
 
 ## Usage
@@ -194,22 +80,51 @@ vercel ls
 
 ### Dashboard Management
 
+- **Templates**: Choose from pre-built dashboard layouts
 - **Rearrange**: Drag widgets to new positions
 - **Resize**: Drag the corner of widgets to resize them
 - **Export**: Download your dashboard configuration
 - **Import**: Upload a previously saved configuration
 - **Clear**: Remove all widgets from the dashboard
+- **API Settings**: Configure multiple data providers
 
-## API Integration
+## API Configuration
 
-The dashboard uses the Alpha Vantage API for real-time financial data:
+The dashboard supports multiple financial data providers that you configure directly in the UI:
 
-- Stock quotes and time series data
-- Top gainers and losers
-- Symbol search functionality
-- Intraday, daily, weekly, and monthly data
+### Supported Providers
 
-API calls are automatically cached and rate-limited to respect API quotas.
+1. **Alpha Vantage** 
+   - Free tier available with rate limits
+   - Get your API key: [https://www.alphavantage.co/support/#api-key](https://www.alphavantage.co/support/#api-key)
+   - Provides: Stock quotes, time series, search, top gainers/losers
+
+2. **Finnhub**
+   - Free tier available with rate limits  
+   - Get your API key: [https://finnhub.io/](https://finnhub.io/)
+   - Provides: Real-time quotes, candle data, company profiles
+
+3. **Custom API Providers**
+   - Add your own API endpoints
+   - Configure custom data transformations
+   - Support for any REST API with proper configuration
+
+### Setting Up API Keys
+
+1. **Access Configuration**: Click the Settings (⚙️) icon in the header
+2. **Select Provider**: Choose from Alpha Vantage, Finnhub, or add custom
+3. **Enter API Key**: Paste your API key in the provided field
+4. **Configure Endpoints**: Customize API endpoints if needed (advanced)
+5. **Test Connection**: Use the test button to verify your setup
+6. **Enable Provider**: Toggle the provider on to start using it
+
+### API Features
+
+- **Automatic Rate Limiting**: Respects API quotas and limits
+- **Error Handling**: Graceful fallbacks and error messages
+- **Caching**: Intelligent caching to reduce API calls
+- **Multiple Providers**: Use different providers for different widgets
+- **Real-time Stats**: Track API call counts and usage
 
 ## Customization
 
@@ -226,27 +141,30 @@ The project uses Tailwind CSS for styling. Customize the theme in `tailwind.conf
 
 ### API Configuration
 
-API settings can be modified in `.env.local`:
+**No environment variables needed!** All API configuration is done through the UI:
 
-```env
-NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=your_api_key_here
-NEXT_PUBLIC_API_BASE_URL=https://www.alphavantage.co/query
-```
+1. Click the Settings (⚙️) button in the header
+2. Add your API keys for supported providers
+3. Configure endpoints and test connections
+4. Enable/disable providers as needed
+5. Settings are automatically saved in your browser
+
+The dashboard handles multiple providers and automatically manages API calls, rate limiting, and error handling.
 
 ## Project Structure
 
 ```
 fin_dashboard/
 ├── components/
-│   ├── common/           # Shared components
-│   ├── layout/           # Layout components
-│   ├── modals/           # Modal components
-│   ├── providers/        # Context providers
-│   └── widgets/          # Widget components
-├── hooks/                # Custom React hooks
+│   ├── common/           # Shared components (templates, loading)
+│   ├── layout/           # Layout components (header, sidebar)
+│   ├── modals/           # Modal components (add widget, API config)
+│   └── widgets/          # Widget components and types
+├── hooks/                # Custom React hooks (widget refresh)
 ├── pages/                # Next.js pages
 ├── store/                # Redux store and slices
-├── styles/               # Global styles
+│   └── slices/           # Dashboard, theme, API config slices
+├── styles/               # Global styles and Tailwind config
 └── public/               # Static assets
 ```
 
@@ -258,6 +176,21 @@ fin_dashboard/
 - **Charts**: Chart.js, React Chart.js 2
 - **Drag & Drop**: React Grid Layout
 - **Icons**: React Icons (Feather Icons)
-- **API**: Alpha Vantage Financial API
+- **APIs**: Alpha Vantage, Finnhub, Custom REST APIs
+- **Storage**: LocalStorage for API configurations and dashboard state
+
+## Quick Start Guide
+
+1. **Clone & Install**: `git clone` → `npm install` → `npm run dev`
+2. **Configure APIs**: Click Settings (⚙️) → Add your API keys → Test & Enable
+3. **Choose Template**: Click Templates or "Add Widget" to get started
+4. **Customize**: Drag, resize, and configure widgets to your liking
+5. **Save & Export**: Your dashboard auto-saves and can be exported/imported
+
+## Getting API Keys
+
+- **Alpha Vantage**: Free at [alphavantage.co](https://www.alphavantage.co/support/#api-key)
+- **Finnhub**: Free at [finnhub.io](https://finnhub.io/)
+- **No .env files needed** - configure everything in the UI!
 
 

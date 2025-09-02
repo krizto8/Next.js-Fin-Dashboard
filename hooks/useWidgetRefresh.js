@@ -4,78 +4,104 @@ import {
   setWidgetLoading, 
   updateWidgetData 
 } from '../store/slices/dashboardSlice';
-import {
-  fetchStockData,
-  fetchQuoteData,
-  fetchTopGainersLosers,
-  searchSymbols
-} from '../store/slices/apiSlice';
+import { incrementApiCalls } from '../store/slices/apiConfigSlice';
 
 export function useWidgetRefresh() {
   const dispatch = useDispatch();
   const { widgets } = useSelector((state) => state.dashboard);
+  const { configs } = useSelector((state) => state.apiConfig);
   const intervalsRef = useRef({});
 
-  // Fetch data from Finnhub API
-  const fetchFromFinnhub = async (widget) => {
+  // Fetch data from configured API provider
+  const fetchFromApiProvider = async (widget, provider) => {
     const { symbol, interval, cardType, tableType } = widget.config;
-    const apiKey = process.env.NEXT_PUBLIC_FINNHUB_API_KEY;
+    const config = configs[provider];
     
-    if (!apiKey) {
-      throw new Error('Finnhub API key not configured');
+    if (!config || !config.enabled) {
+      throw new Error(`${provider} API provider is not enabled or configured`);
+    }
+
+    if (!config.apiKey) {
+      throw new Error(`${provider} API key not configured`);
     }
 
     try {
-      let url = '';
+      let endpoint = '';
       
+      // Select appropriate endpoint
       switch (widget.type) {
         case 'card':
-          // Get quote data - available on free tier
-          url = `https://finnhub.io/api/v1/quote?symbol=${symbol || 'AAPL'}&token=${apiKey}`;
+          endpoint = config.endpoints.quote || '/quote?symbol={symbol}&token={apiKey}';
           break;
         case 'chart':
-          // For free tier, use quote data instead of historical candles
-          // Historical candle data requires premium subscription
-          url = `https://finnhub.io/api/v1/quote?symbol=${symbol || 'AAPL'}&token=${apiKey}`;
+          // Try candles first, fallback to quote
+          endpoint = config.endpoints.candles || config.endpoints.quote || '/quote?symbol={symbol}&token={apiKey}';
           break;
         case 'table':
           if (tableType === 'search') {
-            // Symbol search - available on free tier
-            url = `https://finnhub.io/api/v1/search?q=${symbol || 'AAPL'}&token=${apiKey}`;
+            endpoint = config.endpoints.search || '/search?q={symbol}&token={apiKey}';
           } else {
-            // Default to quote for table
-            url = `https://finnhub.io/api/v1/quote?symbol=${symbol || 'AAPL'}&token=${apiKey}`;
+            endpoint = config.endpoints.quote || '/quote?symbol={symbol}&token={apiKey}';
           }
           break;
         default:
-          url = `https://finnhub.io/api/v1/quote?symbol=${symbol || 'AAPL'}&token=${apiKey}`;
+          endpoint = config.endpoints.quote || '/quote?symbol={symbol}&token={apiKey}';
       }
+
+      // Replace placeholders in endpoint
+      const finalEndpoint = endpoint
+        .replace('{symbol}', encodeURIComponent(symbol || 'AAPL'))
+        .replace('{apiKey}', config.apiKey)
+        .replace('{from}', Math.floor(Date.now() / 1000) - 30 * 24 * 60 * 60) // 30 days ago
+        .replace('{to}', Math.floor(Date.now() / 1000)); // now
+
+      const url = config.baseUrl + finalEndpoint;
 
       const response = await fetch(url);
       
+      // Track successful API call
+      dispatch(incrementApiCalls());
+      
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Finnhub API error: ${response.status} - ${errorText}`);
+        throw new Error(`${config.name} API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
       
-      // Check if Finnhub returned an error in the response
+      // Check if API returned an error in the response
       if (data.error) {
-        throw new Error(`Finnhub API error: ${data.error}`);
+        throw new Error(`${config.name} API error: ${data.error}`);
       }
       
-      // Transform Finnhub data to Alpha Vantage-like format
-      return transformFinnhubData(data, widget.type, symbol);
+      return data;
       
     } catch (error) {
-      // Provide helpful error messages for common Finnhub issues
+      // Provide helpful error messages
       let errorMessage = error.message;
       if (error.message.includes('403') || error.message.includes("You don't have access")) {
-        errorMessage = 'Finnhub API: This endpoint requires a premium subscription. Try switching to Alpha Vantage or upgrade your Finnhub plan.';
+        errorMessage = `${config.name} API: This endpoint may require a premium subscription or different authentication.`;
       }
-      throw new Error(`Finnhub error: ${errorMessage}`);
+      throw new Error(errorMessage);
     }
+  };
+
+  // Generic data transformer for different API providers
+  const transformApiData = (data, widgetType, symbol, provider) => {
+    const config = configs[provider];
+    
+    // If it's already in Alpha Vantage format, return as-is
+    if (data['Global Quote'] || data['Time Series (Daily)'] || data.bestMatches) {
+      return data;
+    }
+
+    // Transform based on provider and widget type
+    if (provider === 'finnhub') {
+      return transformFinnhubData(data, widgetType, symbol);
+    }
+
+    // For custom providers, try to detect the format
+    return data;
   };
 
   // Transform Finnhub response to Alpha Vantage format
@@ -179,56 +205,23 @@ export function useWidgetRefresh() {
       let result = null;
       const { symbol, interval, cardType, tableType, apiProvider } = widget.config;
 
-      // Check if Finnhub is selected as API provider
-      if (apiProvider === 'finnhub') {
-        result = await fetchFromFinnhub(widget);
-      } else {
-        // Use default Alpha Vantage API
-        switch (widget.type) {
-          case 'chart':
-            result = await dispatch(fetchStockData({ 
-              symbol: symbol || 'AAPL', 
-              interval: interval || 'daily' 
-            })).unwrap();
-            break;
-
-          case 'card':
-            if (cardType === 'gainers' || cardType === 'losers' || cardType === 'active') {
-              result = await dispatch(fetchTopGainersLosers()).unwrap();
-            } else {
-              // Default to quote for single stock
-              result = await dispatch(fetchQuoteData({ 
-                symbol: symbol || 'AAPL' 
-              })).unwrap();
-            }
-            break;
-
-          case 'table':
-            if (tableType === 'search') {
-              result = await dispatch(searchSymbols({ 
-                keywords: symbol || 'AAPL' 
-              })).unwrap();
-            } else if (tableType === 'gainers_losers') {
-              result = await dispatch(fetchTopGainersLosers()).unwrap();
-            } else if (tableType === 'timeseries') {
-              result = await dispatch(fetchStockData({ 
-                symbol: symbol || 'AAPL', 
-                interval: interval || 'daily' 
-              })).unwrap();
-            } else {
-              // Default to quote
-              result = await dispatch(fetchQuoteData({ 
-                symbol: symbol || 'AAPL' 
-              })).unwrap();
-            }
-            break;
-
-          default:
-            result = await dispatch(fetchQuoteData({ 
-              symbol: symbol || 'AAPL' 
-            })).unwrap();
+      // Use configured API provider or fall back to first enabled provider
+      let providerToUse = apiProvider;
+      
+      if (!providerToUse || !configs[providerToUse]?.enabled) {
+        // Find first enabled provider
+        providerToUse = Object.keys(configs).find(key => configs[key].enabled);
+        
+        if (!providerToUse) {
+          throw new Error('No API providers configured. Please configure at least one API provider in settings.');
         }
       }
+
+      // Fetch from the selected API provider
+      const apiData = await fetchFromApiProvider(widget, providerToUse);
+      
+      // Transform the data to a standard format
+      result = transformApiData(apiData, widget.type, symbol, providerToUse);
 
       dispatch(updateWidgetData({ 
         id: widget.id, 

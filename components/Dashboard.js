@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { updateLayout, selectWidget, setAddingWidget } from '../store/slices/dashboardSlice';
+import { closeConfigModal } from '../store/slices/apiConfigSlice';
 import Header from './layout/Header';
 import Sidebar from './layout/Sidebar';
 import Widget from './widgets/Widget';
@@ -13,14 +14,16 @@ import { useWidgetRefresh } from '../hooks/useWidgetRefresh';
 const AddWidgetModal = lazy(() => import('./modals/AddWidgetModal'));
 const WidgetConfigModal = lazy(() => import('./modals/WidgetConfigModal'));
 const TemplateSelectionModal = lazy(() => import('./modals/TemplateSelectionModal'));
+const ApiConfigModal = lazy(() => import('./modals/ApiConfigModal'));
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 export default function Dashboard() {
   const dispatch = useDispatch();
   const { widgets, layout, selectedWidget, isAddingWidget } = useSelector((state) => state.dashboard);
+  const { isConfigModalOpen } = useSelector((state) => state.apiConfig);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isWidgetConfigModalOpen, setIsWidgetConfigModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -41,7 +44,7 @@ export default function Dashboard() {
 
   const handleWidgetConfig = (widgetId) => {
     dispatch(selectWidget(widgetId));
-    setIsConfigModalOpen(true);
+    setIsWidgetConfigModalOpen(true);
   };
 
   const handleAddWidget = () => {
@@ -57,22 +60,21 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 w-full">
       <Header 
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onAddWidget={handleAddWidget}
         onOpenTemplates={handleOpenTemplates}
       />
       
-      <div className="flex">
+      <div className="flex w-full">
         <Sidebar 
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
           onOpenTemplates={handleOpenTemplates}
         />
         
-        <main className="flex-1 p-6">
-          {widgets.length === 0 ? (
+        <main className="flex-1 p-4 sm:p-6 w-full min-w-0">{widgets.length === 0 ? (
             <TemplateShowcase 
               onSelectTemplate={handleOpenTemplates}
               onAddWidget={handleAddWidget}
@@ -109,10 +111,10 @@ export default function Dashboard() {
       <Suspense fallback={<LoadingOverlay />}>
         {isAddingWidget && <AddWidgetModal />}
         
-        {isConfigModalOpen && selectedWidget && (
+        {isWidgetConfigModalOpen && selectedWidget && (
           <WidgetConfigModal
-            isOpen={isConfigModalOpen}
-            onClose={() => setIsConfigModalOpen(false)}
+            isOpen={isWidgetConfigModalOpen}
+            onClose={() => setIsWidgetConfigModalOpen(false)}
             widgetId={selectedWidget}
           />
         )}
@@ -123,6 +125,11 @@ export default function Dashboard() {
             onClose={() => setIsTemplateModalOpen(false)}
           />
         )}
+
+        <ApiConfigModal 
+          isOpen={isConfigModalOpen}
+          onClose={() => dispatch(closeConfigModal())}
+        />
       </Suspense>
     </div>
   );
