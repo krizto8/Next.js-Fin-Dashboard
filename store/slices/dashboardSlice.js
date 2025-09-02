@@ -1,6 +1,46 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 
+// Helper function to auto-arrange layout items
+const autoArrangeLayout = (widgets, existingLayout = []) => {
+  const cols = 12;
+  const defaultWidth = 4;
+  const defaultHeight = 4;
+  
+  return widgets.map((widget, index) => {
+    // Try to find existing layout for this widget
+    const existingItem = existingLayout.find(item => item.i === widget.id);
+    
+    if (existingItem) {
+      // Validate existing layout item
+      return {
+        i: widget.id,
+        x: Math.max(0, Math.min(existingItem.x || 0, cols - (existingItem.w || defaultWidth))),
+        y: Math.max(0, existingItem.y || 0),
+        w: Math.max(2, Math.min(existingItem.w || defaultWidth, cols)),
+        h: Math.max(2, existingItem.h || defaultHeight),
+        minW: 2,
+        minH: 2
+      };
+    }
+    
+    // Auto-arrange new widgets in a grid
+    const itemsPerRow = Math.floor(cols / defaultWidth);
+    const row = Math.floor(index / itemsPerRow);
+    const col = index % itemsPerRow;
+    
+    return {
+      i: widget.id,
+      x: col * defaultWidth,
+      y: row * defaultHeight,
+      w: defaultWidth,
+      h: defaultHeight,
+      minW: 2,
+      minH: 2
+    };
+  });
+};
+
 // Load dashboard state from localStorage
 const loadDashboardState = () => {
   if (typeof window !== 'undefined') {
@@ -153,7 +193,10 @@ const dashboardSlice = createSlice({
     importDashboard: (state, action) => {
       const importedState = action.payload;
       state.widgets = importedState.widgets || [];
-      state.layout = importedState.layout || [];
+      
+      // Auto-arrange layout to prevent clustering in top-left
+      state.layout = autoArrangeLayout(state.widgets, importedState.layout || []);
+      
       state.refreshInterval = importedState.refreshInterval || 30000;
       saveDashboardState(state);
     },

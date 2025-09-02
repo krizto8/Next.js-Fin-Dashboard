@@ -377,22 +377,22 @@ export const dashboardTemplates = {
 // Template categories for organization
 export const templateCategories = {
   'Beginner': {
-    icon: '🌱',
+    icon: 'FiTrendingUp',
     description: 'Simple setups for getting started',
     color: 'green'
   },
   'Advanced': {
-    icon: '📊',
+    icon: 'FiBarChart3',
     description: 'Comprehensive analysis tools',
     color: 'blue'
   },
   'Trading': {
-    icon: '⚡',
+    icon: 'FiZap',
     description: 'Real-time trading focused',
     color: 'orange'
   },
   'Crypto': {
-    icon: '₿',
+    icon: 'FiDollarSign',
     description: 'Cryptocurrency tracking',
     color: 'yellow'
   }

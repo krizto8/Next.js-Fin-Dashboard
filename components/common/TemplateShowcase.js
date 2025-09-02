@@ -1,7 +1,20 @@
 import React from 'react';
+import { FiTrendingUp, FiBarChart3, FiZap, FiDollarSign } from 'react-icons/fi';
 import { templateCategories, dashboardTemplates } from '../../utils/dashboardTemplates';
 
 const TemplateShowcase = ({ onSelectTemplate, onAddWidget }) => {
+  const iconMap = {
+    'FiTrendingUp': FiTrendingUp,
+    'FiBarChart3': FiBarChart3,
+    'FiZap': FiZap,
+    'FiDollarSign': FiDollarSign
+  };
+
+  const renderIcon = (iconName) => {
+    const IconComponent = iconMap[iconName] || FiTrendingUp;
+    return <IconComponent className="w-6 h-6" />;
+  };
+
   const featuredTemplates = [
     dashboardTemplates.basic,
     dashboardTemplates.comprehensive,
@@ -97,7 +110,7 @@ const TemplateShowcase = ({ onSelectTemplate, onAddWidget }) => {
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-2xl">
-                  {templateCategories[template.category].icon}
+                  {renderIcon(templateCategories[template.category].icon)}
                 </span>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                   templateCategories[template.category].color === 'green'
@@ -122,22 +135,6 @@ const TemplateShowcase = ({ onSelectTemplate, onAddWidget }) => {
               <div className="text-xs text-gray-500 dark:text-gray-500">
                 {template.widgets.length} widgets included
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Categories Overview */}
-      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
-        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">
-          Template Categories
-        </h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {Object.entries(templateCategories).map(([category, info]) => (
-            <div key={category} className="text-center">
-              <div className="text-3xl mb-2">{info.icon}</div>
-              <div className="font-medium text-gray-900 dark:text-gray-100">{category}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">{info.description}</div>
             </div>
           ))}
         </div>

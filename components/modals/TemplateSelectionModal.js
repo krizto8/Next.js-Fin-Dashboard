@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { FiTrendingUp, FiBarChart3, FiZap, FiDollarSign } from 'react-icons/fi';
 import { 
   dashboardTemplates, 
   templateCategories, 
@@ -13,6 +14,18 @@ const TemplateSelectionModal = ({ isOpen, onClose }) => {
   const [selectedCategory, setSelectedCategory] = useState('Beginner');
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const dispatch = useDispatch();
+
+  const iconMap = {
+    'FiTrendingUp': FiTrendingUp,
+    'FiBarChart3': FiBarChart3,
+    'FiZap': FiZap,
+    'FiDollarSign': FiDollarSign
+  };
+
+  const renderIcon = (iconName) => {
+    const IconComponent = iconMap[iconName] || FiTrendingUp;
+    return <IconComponent className="w-5 h-5" />;
+  };
 
   if (!isOpen) return null;
 
@@ -63,7 +76,7 @@ const TemplateSelectionModal = ({ isOpen, onClose }) => {
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-lg sm:text-xl">{templateCategories[category].icon}</span>
+                    <span className="text-lg sm:text-xl">{renderIcon(templateCategories[category].icon)}</span>
                     <div className="min-w-0">
                       <div className="font-medium text-sm sm:text-base truncate">{category}</div>
                       <div className="text-xs sm:text-sm opacity-75 hidden sm:block">
